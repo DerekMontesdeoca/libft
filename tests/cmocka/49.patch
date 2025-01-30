@@ -1,0 +1,1628 @@
+From 6a99bd773e986a615272ed0611d4fc7636b01a03 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:37:34 +0900
+Subject: [PATCH 1/8] Fixed warning when compiling on Windows: warning C4996:
+ 'strdup': The POSIX name for this item is deprecated. Instead, use the ISO
+ C++ conformant name: _strdup. See online help for details.
+
+---
+ include/cmocka_private.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/cmocka_private.h b/include/cmocka_private.h
+index 4d3ff30..7ee4a76 100644
+--- a/include/cmocka_private.h
++++ b/include/cmocka_private.h
+@@ -40,6 +40,7 @@
+ #  define strcasecmp _stricmp
+ #  define strncasecmp _strnicmp
+ #  define strtok_r strtok_s
++#  define strdup _strdup
+ 
+ #  if defined(HAVE__SNPRINTF_S)
+ #   undef snprintf
+-- 
+GitLab
+
+
+From 7f2705e48bcde685189764303246601c13d66718 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:40:08 +0900
+Subject: [PATCH 2/8] Improve the implementation of the TAP output by printing
+ the message, severity, data, etc. in a YAML diagnostics section, as specified
+ by the TAP14 specification.
+
+---
+ src/cmocka.c | 66 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 37 insertions(+), 29 deletions(-)
+
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 2518590..1ab88fe 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -2725,7 +2725,7 @@ static void cmprintf_group_start_tap(const size_t num_tests)
+ {
+     static bool version_printed = false;
+     if (!version_printed) {
+-        print_message("TAP version 13\n");
++        print_message("TAP version 14\n");
+         version_printed = true;
+     }
+ 
+@@ -2749,6 +2749,8 @@ static void cmprintf_tap(enum cm_printf_type type,
+                          const char *test_name,
+                          const char *error_message)
+ {
++    int print_error_message = 0;
++
+     switch (type) {
+     case PRINTF_TEST_START:
+         break;
+@@ -2756,42 +2758,48 @@ static void cmprintf_tap(enum cm_printf_type type,
+         print_message("ok %u - %s\n", (unsigned)test_number, test_name);
+         break;
+     case PRINTF_TEST_FAILURE:
++    case PRINTF_TEST_ERROR:
+         print_message("not ok %u - %s\n", (unsigned)test_number, test_name);
+-        if (error_message != NULL) {
+-            char *msg;
+-            char *p;
++        print_error_message = 1;
++        break;
++    case PRINTF_TEST_SKIPPED:
++        print_message("ok %u - %s # SKIP\n", (unsigned)test_number, test_name);
++        break;
++    }
+ 
+-            msg = strdup(error_message);
+-            if (msg == NULL) {
+-                return;
+-            }
+-            p = msg;
++    if ((print_error_message == 1) && (error_message != NULL)) {
++        char *msg;
++        char *p;
++        const char *indent = "";
+ 
+-            while (p[0] != '\0') {
+-                char *q = p;
++        msg = strdup(error_message);
++        if (msg == NULL) {
++            return;
++        }
++        p = msg;
+ 
+-                p = strchr(q, '\n');
+-                if (p != NULL) {
+-                    p[0] = '\0';
+-                }
++        print_message("  ---\n");
+ 
+-                print_message("# %s\n", q);
++        print_message("  message: \"");
++        while (p[0] != '\0') {
++            char *q = p;
+ 
+-                if (p == NULL) {
+-                    break;
+-                }
+-                p++;
++            p = strchr(q, '\n');
++            if (p != NULL) {
++                p[0] = '\0';
++                print_message("%s%s\\n\\\n", indent, q);
++            } else {
++                print_message("%s%s\"\n", indent, q);
++                break;
+             }
+-            libc_free(msg);
++            p++;
++            indent = "           ";
+         }
+-        break;
+-    case PRINTF_TEST_SKIPPED:
+-        print_message("ok %u # SKIP %s\n", (unsigned)test_number, test_name);
+-        break;
+-    case PRINTF_TEST_ERROR:
+-        print_message("not ok %u - %s %s\n",
+-                      (unsigned)test_number, test_name, error_message);
+-        break;
++        libc_free(msg);
++
++        print_message("  severity: %s\n", (type == PRINTF_TEST_FAILURE) ? "fail" : "error");
++
++        print_message("  ...\n");
+     }
+ }
+ 
+-- 
+GitLab
+
+
+From 9874464dc7858475ace081dc748b0f399213b473 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:44:18 +0900
+Subject: [PATCH 3/8] Added functions so that custom data can be attached to
+ the current test. I'm open to a different implementation, but I basically
+ needed a mechanism that is flexible enough to print any kind of data whether
+ a test passes or fails. For example, on the app using cmocka, I wanted to be
+ able to redefine the assert_* macros to automatically include data such as
+ 'expected', 'got' when a test fails. Currently the data are only used by the
+ TAP output.
+
+---
+ include/cmocka.h |  51 +++++++++++++
+ src/cmocka.c     | 185 ++++++++++++++++++++++++++++++++++++++++++++---
+ src/cmocka.def   |   6 ++
+ 3 files changed, 231 insertions(+), 11 deletions(-)
+
+diff --git a/include/cmocka.h b/include/cmocka.h
+index 1897240..18f0da3 100644
+--- a/include/cmocka.h
++++ b/include/cmocka.h
+@@ -1742,6 +1742,45 @@ void stop(void);
+ #define stop() _stop()
+ #endif
+ 
++#ifdef DOXYGEN
++/**
++ * @brief Initialize a list of data for the current test.
++ */
++int attach_test_data(size_t size);
++
++/**
++ * @brief Expand the list of data for the current test.
++ */
++int extend_test_data(size_t size);
++
++/**
++ * @brief Append Boolean data for the current test.
++ */
++void append_test_data_boolean(const char * const name, int value);
++
++/**
++ * @brief Append Integer data for the current test.
++ */
++void append_test_data_integer(const char * const name, uintmax_t value);
++
++/**
++ * @brief Append Pointer data for the current test.
++ */
++void append_test_data_pointer(const char * const name, void * const value);
++
++/**
++ * @brief Append String data for the current test.
++ */
++void append_test_data_string(const char * const name, const char * value);
++#else
++#define attach_test_data(s) _attach_test_data(s, __FILE__, __LINE__)
++#define extend_test_data(s) _extend_test_data(s, __FILE__, __LINE__)
++#define append_test_data_boolean(n, v) _append_test_data_boolean(n, v, __FILE__, __LINE__)
++#define append_test_data_integer(n, v) _append_test_data_integer(n, v, __FILE__, __LINE__)
++#define append_test_data_pointer(n, v) _append_test_data_pointer(n, v, __FILE__, __LINE__)
++#define append_test_data_string(n, v)  _append_test_data_string(n, v, __FILE__, __LINE__)
++#endif
++
+ #ifdef DOXYGEN
+ /**
+  * @brief Forces the test to fail immediately and quit, printing the reason.
+@@ -2436,6 +2475,18 @@ CMOCKA_NORETURN void _skip(const char * const file, const int line);
+ 
+ CMOCKA_NORETURN void _stop(void);
+ 
++int _attach_test_data(size_t size, const char * const file, const int line);
++
++int _extend_test_data(size_t size, const char * const file, const int line);
++
++void _append_test_data_boolean(const char * const name, int value, const char * const file, const int line);
++
++void _append_test_data_integer(const char * const name, uintmax_t value, const char * const file, const int line);
++
++void _append_test_data_pointer(const char * const name, void * const value, const char * const file, const int line);
++
++void _append_test_data_string(const char * const name, const char * value, const char * const file, const int line);
++
+ /* Test runner */
+ int _cmocka_run_group_tests(const char *group_name,
+                             const struct CMUnitTest * const tests,
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 1ab88fe..8bc13d8 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -201,6 +201,19 @@ typedef struct CheckMemoryData {
+     size_t size;
+ } CheckMemoryData;
+ 
++typedef enum CMDataType {
++    DATA_TYPE_BOOLEAN,
++    DATA_TYPE_INTEGER,
++    DATA_TYPE_POINTER,
++    DATA_TYPE_STRING,
++} CMDataType;
++
++typedef struct CMData {
++    char *name;
++    void *value;
++    CMDataType type;
++} CMData;
++
+ static ListNode* list_initialize(ListNode * const node);
+ static ListNode* list_add(ListNode * const head, ListNode *new_node);
+ static ListNode* list_add_value(ListNode * const head, const void *value,
+@@ -270,6 +283,11 @@ const char *global_last_failed_assert = NULL;
+ static int global_skip_test;
+ static int global_stop_test;
+ 
++/* Keeps an array of CMData to be printed for TAP output. */
++static CMOCKA_THREAD CMData** global_test_data = NULL;
++static CMOCKA_THREAD size_t global_test_data_max_size;
++static CMOCKA_THREAD size_t global_test_data_len;
++
+ /* Keeps a map of the values that functions will have to return to provide */
+ /* mocked interfaces. */
+ static CMOCKA_THREAD ListNode global_function_result_map_head;
+@@ -410,6 +428,107 @@ void _stop(void)
+     exit(EXIT_FAILURE);
+ }
+ 
++static void free_test_data(void) {
++    if (global_test_data) {
++        CMData* d;
++        size_t i;
++        for (i = 0; i < global_test_data_len; i++) {
++            d = global_test_data[i];
++            if (d) {
++                free(d->name);
++                switch (d->type) {
++                case DATA_TYPE_STRING:
++                    free(d->value);
++                default:
++                    break;
++                }
++                free(d);
++            }
++        }
++        free(global_test_data);
++
++        global_test_data = NULL;
++        global_test_data_max_size = 0;
++        global_test_data_len = 0;
++    }
++}
++
++int _attach_test_data(size_t size, const char * const file, const int line) {
++    if (size > 0) {
++        free_test_data();
++        global_test_data = (CMData**)malloc(size * sizeof(CMData*));
++        if (!global_test_data) {
++            cmocka_print_error(SOURCE_LOCATION_FORMAT ": error: Failed to initialize data list.\n", file, line);
++            return 1;
++        } else {
++            global_test_data_max_size = size;
++            global_test_data_len = 0;
++        }
++    }
++    return 0;
++}
++
++int _extend_test_data(size_t size, const char * const file, const int line) {
++    if (size > 0) {
++        CMData** tmp;
++        size_t tmp_size = global_test_data_max_size + size;
++
++        tmp = (CMData**)realloc(global_test_data, tmp_size * sizeof(CMData*));
++        if (!tmp) {
++            cmocka_print_error(SOURCE_LOCATION_FORMAT ": error: Failed to expand data list.\n", file, line);
++            return 1;
++        } else {
++            global_test_data = tmp;
++            global_test_data_max_size = tmp_size;
++        }
++    }
++    return 0;
++}
++
++static void _append_test_data(const char * const name, void * const value, CMDataType type, const char * const file, const int line) {
++    CMData* d;
++
++    if (!global_test_data) {
++        if (_attach_test_data(10, file, line) == 1) {
++            return;
++        }
++    } else if (global_test_data_len + 1 > global_test_data_max_size) {
++        if (_extend_test_data(10, file, line) == 1) {
++            return;
++        }
++    }
++
++    d = (CMData*)malloc(sizeof(CMData));
++    if (d) {
++        d->name = strdup(name);
++        switch (type) {
++        case DATA_TYPE_STRING:
++            d->value = strdup(value);
++            break;
++        default:
++            d->value = value;
++        }
++        d->type = type;
++        global_test_data[global_test_data_len++] = d;
++    }
++}
++
++void _append_test_data_boolean(const char * const name, int value, const char * const file, const int line) {
++    _append_test_data(name, cast_uintmax_type_to_pointer(void * const, value), DATA_TYPE_BOOLEAN, file, line);
++}
++
++void _append_test_data_integer(const char * const name, uintmax_t value, const char * const file, const int line) {
++    _append_test_data(name, cast_uintmax_type_to_pointer(void * const, value), DATA_TYPE_INTEGER, file, line);
++}
++
++void _append_test_data_pointer(const char * const name, void * const value, const char * const file, const int line) {
++    _append_test_data(name, value, DATA_TYPE_POINTER, file, line);
++}
++
++void _append_test_data_string(const char * const name, const char * value, const char * const file, const int line) {
++    _append_test_data(name, (void * const)value, DATA_TYPE_STRING, file, line);
++}
++
+ /* Initialize a SourceLocation structure. */
+ static void initialize_source_location(SourceLocation * const location) {
+     assert_non_null(location);
+@@ -2747,8 +2866,12 @@ static void cmprintf_group_finish_tap(const char *group_name,
+ static void cmprintf_tap(enum cm_printf_type type,
+                          size_t test_number,
+                          const char *test_name,
+-                         const char *error_message)
++                         const char *error_message,
++                         CMData** test_data)
+ {
++    CMData* d;
++    size_t i;
++    int diagnostics_opened = 0;
+     int print_error_message = 0;
+ 
+     switch (type) {
+@@ -2779,6 +2902,7 @@ static void cmprintf_tap(enum cm_printf_type type,
+         p = msg;
+ 
+         print_message("  ---\n");
++        diagnostics_opened = 1;
+ 
+         print_message("  message: \"");
+         while (p[0] != '\0') {
+@@ -2798,7 +2922,39 @@ static void cmprintf_tap(enum cm_printf_type type,
+         libc_free(msg);
+ 
+         print_message("  severity: %s\n", (type == PRINTF_TEST_FAILURE) ? "fail" : "error");
++    }
++
++    if (test_data) {
++        if (diagnostics_opened == 0) {
++            print_message("  ---\n");
++            diagnostics_opened = 1;
++        }
++        print_message("  data:\n");
++
++        for (i = 0; i < global_test_data_len; i++) {
++            d = test_data[i];
++            switch (d->type) {
++            case DATA_TYPE_BOOLEAN:
++                print_message("    %s: %s\n",
++                              d->name, (int)cast_ptr_to_uintmax_type(d->value) != (int)0 ? "true" : "false");
++                break;
++            case DATA_TYPE_INTEGER:
++                print_message("    %s: %#jx\n",
++                              d->name, cast_ptr_to_uintmax_type(d->value));
++                break;
++            case DATA_TYPE_POINTER:
++                print_message("    %s: %p\n",
++                              d->name, d->value);
++                break;
++            case DATA_TYPE_STRING:
++                print_message("    %s: '%s'\n",
++                              d->name, (const char *)(d->value));
++                break;
++            }
++        }
++    }
+ 
++    if (diagnostics_opened == 1) {
+         print_message("  ...\n");
+     }
+ }
+@@ -2886,7 +3042,8 @@ static void cmprintf_group_finish(const char *group_name,
+ static void cmprintf(enum cm_printf_type type,
+                      size_t test_number,
+                      const char *test_name,
+-                     const char *error_message)
++                     const char *error_message,
++                     CMData** test_data)
+ {
+     uint32_t output;
+ 
+@@ -2899,7 +3056,7 @@ static void cmprintf(enum cm_printf_type type,
+         cmprintf_subunit(type, test_name, error_message);
+     }
+     if (output & CM_OUTPUT_TAP) {
+-        cmprintf_tap(type, test_number, test_name, error_message);
++        cmprintf_tap(type, test_number, test_name, error_message, test_data);
+     }
+ }
+ 
+@@ -3253,7 +3410,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             struct CMUnitTestState *cmtest = &cm_tests[i];
+             size_t test_number = i + 1;
+ 
+-            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL);
++            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL, NULL);
+ 
+             if (group_state != NULL) {
+                 cmtest->state = group_state;
+@@ -3270,28 +3427,32 @@ int _cmocka_run_group_tests(const char *group_name,
+                         cmprintf(PRINTF_TEST_SUCCESS,
+                                  test_number,
+                                  cmtest->test->name,
+-                                 cmtest->error_message);
++                                 cmtest->error_message,
++                                 global_test_data);
+                         total_passed++;
+                         break;
+                     case CM_TEST_SKIPPED:
+                         cmprintf(PRINTF_TEST_SKIPPED,
+                                  test_number,
+                                  cmtest->test->name,
+-                                 cmtest->error_message);
++                                 cmtest->error_message,
++                                 global_test_data);
+                         total_skipped++;
+                         break;
+                     case CM_TEST_FAILED:
+                         cmprintf(PRINTF_TEST_FAILURE,
+                                  test_number,
+                                  cmtest->test->name,
+-                                 cmtest->error_message);
++                                 cmtest->error_message,
++                                 global_test_data);
+                         total_failed++;
+                         break;
+                     default:
+                         cmprintf(PRINTF_TEST_ERROR,
+                                  test_number,
+                                  cmtest->test->name,
+-                                 "Internal cmocka error");
++                                 "Internal cmocka error",
++                                 NULL);
+                         total_errors++;
+                         break;
+                 }
+@@ -3305,9 +3466,11 @@ int _cmocka_run_group_tests(const char *group_name,
+                 cmprintf(PRINTF_TEST_ERROR,
+                          test_number,
+                          cmtest->test->name,
+-                         err_msg);
++                         err_msg,
++                         NULL);
+                 total_errors++;
+             }
++            free_test_data();
+         }
+     } else {
+         if (cm_error_message != NULL) {
+@@ -3316,7 +3479,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             cm_error_message = NULL;
+         }
+         cmprintf(PRINTF_TEST_ERROR, 0,
+-                 group_name, "[  FAILED  ] GROUP SETUP");
++                 group_name, "[  FAILED  ] GROUP SETUP", NULL);
+         total_errors++;
+     }
+ 
+@@ -3334,7 +3497,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                 cm_error_message = NULL;
+             }
+             cmprintf(PRINTF_TEST_ERROR, 0,
+-                     group_name, "[  FAILED  ] GROUP TEARDOWN");
++                     group_name, "[  FAILED  ] GROUP TEARDOWN", NULL);
+         }
+     }
+ 
+diff --git a/src/cmocka.def b/src/cmocka.def
+index f56b9a5..edeeffa 100644
+--- a/src/cmocka.def
++++ b/src/cmocka.def
+@@ -1,5 +1,9 @@
+ LIBRARY cmocka
+ EXPORTS
++    _append_test_data_boolean
++    _append_test_data_integer
++    _append_test_data_pointer
++    _append_test_data_string
+     _assert_double_equal
+     _assert_double_not_equal
+     _assert_float_equal
+@@ -20,6 +24,7 @@ EXPORTS
+     _assert_uint_equal
+     _assert_uint_in_range
+     _assert_uint_not_equal
++    _attach_test_data
+     _check_expected
+     _cmocka_run_group_tests
+     _expect_any
+@@ -35,6 +40,7 @@ EXPORTS
+     _expect_not_value
+     _expect_string
+     _expect_value
++    _extend_test_data
+     _fail
+     _function_called
+     _mock
+-- 
+GitLab
+
+
+From 3565734f7029a8a0c1600b292e641ec90e63ae17 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:47:28 +0900
+Subject: [PATCH 4/8] Added skip_with_note() function to provide an explanation
+ about why the test is to be skipped.
+
+---
+ include/cmocka.h | 13 ++++++++++++
+ src/cmocka.c     | 55 ++++++++++++++++++++++++++++++++++++++++--------
+ src/cmocka.def   |  1 +
+ 3 files changed, 60 insertions(+), 9 deletions(-)
+
+diff --git a/include/cmocka.h b/include/cmocka.h
+index 18f0da3..827e7a0 100644
+--- a/include/cmocka.h
++++ b/include/cmocka.h
+@@ -1728,6 +1728,17 @@ void skip(void);
+ #define skip() _skip(__FILE__, __LINE__)
+ #endif
+ 
++#ifdef DOXYGEN
++/**
++ * @brief Forces the test to not be executed, but marked as skipped.
++ *
++ * @param[in]  note  Explanation about why the test is skipped.
++ */
++void skip_with_note(const char * const note, void);
++#else
++#define skip_with_note(note) _skip_with_note(note, __FILE__, __LINE__)
++#endif
++
+ #ifdef DOXYGEN
+ /**
+  * @brief Forces the test to be stopped immediately.
+@@ -2473,6 +2484,8 @@ CMOCKA_NORETURN void _fail(const char * const file, const int line);
+ 
+ CMOCKA_NORETURN void _skip(const char * const file, const int line);
+ 
++CMOCKA_NORETURN void _skip_with_note(const char * const note, const char * const file, const int line);
++
+ CMOCKA_NORETURN void _stop(void);
+ 
+ int _attach_test_data(size_t size, const char * const file, const int line);
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 8bc13d8..9c8c340 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -281,6 +281,7 @@ jmp_buf global_expect_assert_env;
+ int global_expecting_assert = 0;
+ const char *global_last_failed_assert = NULL;
+ static int global_skip_test;
++static const char * global_skip_test_note = NULL;
+ static int global_stop_test;
+ 
+ /* Keeps an array of CMData to be printed for TAP output. */
+@@ -385,6 +386,7 @@ struct CMUnitTestState {
+     const char *error_message; /* The error messages by the test */
+     enum CMUnitTestStatus status; /* PASSED, FAILED, ABORT ... */
+     double runtime; /* Time calculations */
++    const char *skip_note; /* Explanation when the test is skipped */ 
+ };
+ 
+ /* Exit the currently executing test. */
+@@ -419,6 +421,17 @@ void _skip(const char * const file, const int line)
+     exit(EXIT_FAILURE);
+ }
+ 
++void _skip_with_note(const char * const note, const char * const file, const int line)
++{
++    cmocka_print_error(SOURCE_LOCATION_FORMAT ": Skipped (%s)!\n", file, line, note);
++    global_skip_test = 1;
++    global_skip_test_note = note;
++    exit_test(true);
++
++    /* Unreachable */
++    exit(EXIT_FAILURE);
++}
++
+ void _stop(void)
+ {
+     global_stop_test = 1;
+@@ -2738,7 +2751,12 @@ static void cmprintf_group_finish_xml(const char *group_name,
+             }
+             break;
+         case CM_TEST_SKIPPED:
+-            fprintf(fp, "      <skipped/>\n");
++            if (cmtest->skip_note) {
++                fprintf(fp, "      <skipped><![CDATA[%s]]></skipped>\n",
++                        cmtest->skip_note);
++            } else {
++                fprintf(fp, "      <skipped/>\n");
++            }
+             break;
+ 
+         case CM_TEST_PASSED:
+@@ -2813,7 +2831,8 @@ static void cmprintf_group_finish_standard(const char *group_name,
+ 
+ static void cmprintf_standard(enum cm_printf_type type,
+                               const char *test_name,
+-                              const char *error_message)
++                              const char *error_message,
++                              const char *skip_note)
+ {
+     switch (type) {
+     case PRINTF_TEST_START:
+@@ -2829,7 +2848,11 @@ static void cmprintf_standard(enum cm_printf_type type,
+         print_message("[  FAILED  ] %s\n", test_name);
+         break;
+     case PRINTF_TEST_SKIPPED:
+-        print_message("[  SKIPPED ] %s\n", test_name);
++        if (skip_note) {
++            print_message("[  SKIPPED ] %s - %s\n", test_name, skip_note);
++        } else {
++            print_message("[  SKIPPED ] %s\n", test_name);
++        }
+         break;
+     case PRINTF_TEST_ERROR:
+         if (error_message != NULL) {
+@@ -2867,6 +2890,7 @@ static void cmprintf_tap(enum cm_printf_type type,
+                          size_t test_number,
+                          const char *test_name,
+                          const char *error_message,
++                         const char *skip_note,
+                          CMData** test_data)
+ {
+     CMData* d;
+@@ -2886,7 +2910,11 @@ static void cmprintf_tap(enum cm_printf_type type,
+         print_error_message = 1;
+         break;
+     case PRINTF_TEST_SKIPPED:
+-        print_message("ok %u - %s # SKIP\n", (unsigned)test_number, test_name);
++        if (skip_note) {
++            print_message("ok %u - %s # SKIP %s\n", (unsigned)test_number, test_name, skip_note);
++        } else {
++            print_message("ok %u - %s # SKIP\n", (unsigned)test_number, test_name);
++        }
+         break;
+     }
+ 
+@@ -2977,6 +3005,7 @@ static void cmprintf_subunit(enum cm_printf_type type,
+         }
+         break;
+     case PRINTF_TEST_SKIPPED:
++        /* TODO: should we print the explanation in DETAILS region as explained here: https://github.com/testing-cabal/subunit */
+         print_message("skip: %s\n", test_name);
+         break;
+     case PRINTF_TEST_ERROR:
+@@ -3043,6 +3072,7 @@ static void cmprintf(enum cm_printf_type type,
+                      size_t test_number,
+                      const char *test_name,
+                      const char *error_message,
++                     const char *skip_note,
+                      CMData** test_data)
+ {
+     uint32_t output;
+@@ -3050,13 +3080,13 @@ static void cmprintf(enum cm_printf_type type,
+     output = cm_get_output();
+ 
+     if (output & CM_OUTPUT_STANDARD) {
+-        cmprintf_standard(type, test_name, error_message);
++        cmprintf_standard(type, test_name, error_message, skip_note);
+     }
+     if (output & CM_OUTPUT_SUBUNIT) {
+         cmprintf_subunit(type, test_name, error_message);
+     }
+     if (output & CM_OUTPUT_TAP) {
+-        cmprintf_tap(type, test_number, test_name, error_message, test_data);
++        cmprintf_tap(type, test_number, test_name, error_message, skip_note, test_data);
+     }
+ }
+ 
+@@ -3298,7 +3328,9 @@ static int cmocka_run_one_tests(struct CMUnitTestState *test_state)
+         } else {
+             if (global_skip_test) {
+                 test_state->status = CM_TEST_SKIPPED;
++                test_state->skip_note = global_skip_test_note;
+                 global_skip_test = 0; /* Do not skip the next test */
++                global_skip_test_note = NULL;
+             } else {
+                 test_state->status = CM_TEST_FAILED;
+             }
+@@ -3410,7 +3442,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             struct CMUnitTestState *cmtest = &cm_tests[i];
+             size_t test_number = i + 1;
+ 
+-            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL, NULL);
++            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL, NULL, NULL);
+ 
+             if (group_state != NULL) {
+                 cmtest->state = group_state;
+@@ -3428,6 +3460,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  test_number,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
++                                 cmtest->skip_note,
+                                  global_test_data);
+                         total_passed++;
+                         break;
+@@ -3436,6 +3469,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  test_number,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
++                                 cmtest->skip_note,
+                                  global_test_data);
+                         total_skipped++;
+                         break;
+@@ -3444,6 +3478,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  test_number,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
++                                 cmtest->skip_note,
+                                  global_test_data);
+                         total_failed++;
+                         break;
+@@ -3452,6 +3487,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  test_number,
+                                  cmtest->test->name,
+                                  "Internal cmocka error",
++                                 NULL,
+                                  NULL);
+                         total_errors++;
+                         break;
+@@ -3467,6 +3503,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                          test_number,
+                          cmtest->test->name,
+                          err_msg,
++                         NULL,
+                          NULL);
+                 total_errors++;
+             }
+@@ -3479,7 +3516,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             cm_error_message = NULL;
+         }
+         cmprintf(PRINTF_TEST_ERROR, 0,
+-                 group_name, "[  FAILED  ] GROUP SETUP", NULL);
++                 group_name, "[  FAILED  ] GROUP SETUP", NULL, NULL);
+         total_errors++;
+     }
+ 
+@@ -3497,7 +3534,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                 cm_error_message = NULL;
+             }
+             cmprintf(PRINTF_TEST_ERROR, 0,
+-                     group_name, "[  FAILED  ] GROUP TEARDOWN", NULL);
++                     group_name, "[  FAILED  ] GROUP TEARDOWN", NULL, NULL);
+         }
+     }
+ 
+diff --git a/src/cmocka.def b/src/cmocka.def
+index edeeffa..3b29014 100644
+--- a/src/cmocka.def
++++ b/src/cmocka.def
+@@ -45,6 +45,7 @@ EXPORTS
+     _function_called
+     _mock
+     _skip
++    _skip_with_note
+     _stop
+     _test_calloc
+     _test_free
+-- 
+GitLab
+
+
+From e28858ac8ddab8237497db6330b51d0e0500a6ef Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:50:06 +0900
+Subject: [PATCH 5/8] Added support for TODO tests, which represent features to
+ be implemented. According to the TAP specification, these tests must not be
+ treated as a test failure if they fail (see
+ https://testanything.org/tap-version-14-specification.html).
+
+---
+ include/cmocka.h |  24 +++++++
+ src/cmocka.c     | 175 +++++++++++++++++++++++++++++++++++++++++++----
+ src/cmocka.def   |   2 +
+ 3 files changed, 189 insertions(+), 12 deletions(-)
+
+diff --git a/include/cmocka.h b/include/cmocka.h
+index 827e7a0..10138d7 100644
+--- a/include/cmocka.h
++++ b/include/cmocka.h
+@@ -1753,6 +1753,26 @@ void stop(void);
+ #define stop() _stop()
+ #endif
+ 
++#ifdef DOXYGEN
++/**
++ * @brief Mark the test as TODO, for a feature that is not fully implemented yet.
++ */
++void todo(void);
++#else
++#define todo() _todo(__FILE__, __LINE__)
++#endif
++
++#ifdef DOXYGEN
++/**
++ * @brief Mark the test as TODO, for a feature that is not fully implemented yet.
++ *
++ * @param[in]  note  Explanation about why the test is marked as TODO.
++ */
++void todo_with_note(const char * const note, void);
++#else
++#define todo_with_note(note) _todo_with_note(note, __FILE__, __LINE__)
++#endif
++
+ #ifdef DOXYGEN
+ /**
+  * @brief Initialize a list of data for the current test.
+@@ -2488,6 +2508,10 @@ CMOCKA_NORETURN void _skip_with_note(const char * const note, const char * const
+ 
+ CMOCKA_NORETURN void _stop(void);
+ 
++void _todo(const char * const file, const int line);
++
++void _todo_with_note(const char * const note, const char * const file, const int line);
++
+ int _attach_test_data(size_t size, const char * const file, const int line);
+ 
+ int _extend_test_data(size_t size, const char * const file, const int line);
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 9c8c340..978a477 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -283,6 +283,8 @@ const char *global_last_failed_assert = NULL;
+ static int global_skip_test;
+ static const char * global_skip_test_note = NULL;
+ static int global_stop_test;
++static int global_todo_test;
++static const char * global_todo_test_note = NULL;
+ 
+ /* Keeps an array of CMData to be printed for TAP output. */
+ static CMOCKA_THREAD CMData** global_test_data = NULL;
+@@ -377,6 +379,8 @@ enum CMUnitTestStatus {
+     CM_TEST_FAILED,
+     CM_TEST_ERROR,
+     CM_TEST_SKIPPED,
++    CM_TEST_TODO_OK,
++    CM_TEST_TODO,
+ };
+ 
+ struct CMUnitTestState {
+@@ -387,6 +391,7 @@ struct CMUnitTestState {
+     enum CMUnitTestStatus status; /* PASSED, FAILED, ABORT ... */
+     double runtime; /* Time calculations */
+     const char *skip_note; /* Explanation when the test is skipped */ 
++    const char *todo_note; /* Explanation when the test is marked as TODO */
+ };
+ 
+ /* Exit the currently executing test. */
+@@ -441,6 +446,17 @@ void _stop(void)
+     exit(EXIT_FAILURE);
+ }
+ 
++void _todo(const char * const file, const int line)
++{
++    global_todo_test = 1;
++}
++
++void _todo_with_note(const char * const note, const char * const file, const int line)
++{
++    global_todo_test = 1;
++    global_todo_test_note = note;
++}
++
+ static void free_test_data(void) {
+     if (global_test_data) {
+         CMData* d;
+@@ -2661,6 +2677,8 @@ enum cm_printf_type {
+     PRINTF_TEST_FAILURE,
+     PRINTF_TEST_ERROR,
+     PRINTF_TEST_SKIPPED,
++    PRINTF_TEST_TODO_OK,
++    PRINTF_TEST_TODO,
+ };
+ 
+ static int xml_printed;
+@@ -2671,6 +2689,8 @@ static void cmprintf_group_finish_xml(const char *group_name,
+                                       size_t total_failed,
+                                       size_t total_errors,
+                                       size_t total_skipped,
++                                      size_t total_todo_ok,
++                                      size_t total_todo,
+                                       double total_runtime,
+                                       struct CMUnitTestState *cm_tests)
+ {
+@@ -2726,13 +2746,15 @@ static void cmprintf_group_finish_xml(const char *group_name,
+ 
+     fprintf(fp, "<testsuites>\n");
+     fprintf(fp, "  <testsuite name=\"%s\" time=\"%.3f\" "
+-                "tests=\"%u\" failures=\"%u\" errors=\"%u\" skipped=\"%u\" >\n",
++                "tests=\"%u\" failures=\"%u\" errors=\"%u\" skipped=\"%u\" todo_ok=\"%u\" todo=\"%u\" >\n",
+                 group_name,
+                 total_runtime, /* seconds */
+                 (unsigned)total_executed,
+                 (unsigned)total_failed,
+                 (unsigned)total_errors,
+-                (unsigned)total_skipped);
++                (unsigned)total_skipped,
++                (unsigned)total_todo_ok,
++                (unsigned)total_todo);
+ 
+     for (i = 0; i < total_executed; i++) {
+         struct CMUnitTestState *cmtest = &cm_tests[i];
+@@ -2741,6 +2763,18 @@ static void cmprintf_group_finish_xml(const char *group_name,
+                 cmtest->test->name, cmtest->runtime);
+ 
+         switch (cmtest->status) {
++        case CM_TEST_TODO_OK:
++        case CM_TEST_TODO:
++            if (cmtest->todo_note) {
++                fprintf(fp, "      <todo><![CDATA[%s]]></todo>\n",
++                        cmtest->todo_note);
++            } else {
++                fprintf(fp, "      <todo/>\n");
++            }
++            if (cmtest->status == CM_TEST_TODO_OK) {
++                break;
++            }
++            // fall through
+         case CM_TEST_ERROR:
+         case CM_TEST_FAILED:
+             if (cmtest->error_message != NULL) {
+@@ -2789,6 +2823,8 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                                            size_t total_failed,
+                                            size_t total_errors,
+                                            size_t total_skipped,
++                                           size_t total_todo_ok,
++                                           size_t total_todo,
+                                            struct CMUnitTestState *cm_tests)
+ {
+     size_t i;
+@@ -2799,6 +2835,34 @@ static void cmprintf_group_finish_standard(const char *group_name,
+     print_error("[  PASSED  ] %u test(s).\n",
+                 (unsigned)(total_passed));
+ 
++    if (total_todo_ok) {
++        print_message("[  TODO OK ] %s: %zu test(s), listed below:\n",
++                      group_name,
++                      total_todo_ok);
++        for (i = 0; i < total_executed; i++) {
++            struct CMUnitTestState *cmtest = &cm_tests[i];
++
++            if (cmtest->status == CM_TEST_TODO_OK) {
++                print_message("[  TODO OK ] %s\n", cmtest->test->name);
++            }
++        }
++        print_message("\n %u TODO TEST(S) PASSED - Consider promoting to normal test(s).\n", (unsigned)(total_todo_ok));
++    }
++
++    if (total_todo) {
++        print_message("[  TODO    ] %s: %zu test(s), listed below:\n",
++                      group_name,
++                      total_todo);
++        for (i = 0; i < total_executed; i++) {
++            struct CMUnitTestState *cmtest = &cm_tests[i];
++
++            if (cmtest->status == CM_TEST_TODO) {
++                print_message("[  TODO    ] %s\n", cmtest->test->name);
++            }
++        }
++        print_message("\n %u TODO TEST(S)\n", (unsigned)(total_todo));
++    }
++
+     if (total_skipped) {
+         print_error("[  SKIPPED ] %s: %zu test(s), listed below:\n",
+                     group_name,
+@@ -2832,7 +2896,8 @@ static void cmprintf_group_finish_standard(const char *group_name,
+ static void cmprintf_standard(enum cm_printf_type type,
+                               const char *test_name,
+                               const char *error_message,
+-                              const char *skip_note)
++                              const char *skip_note,
++                              const char *todo_note)
+ {
+     switch (type) {
+     case PRINTF_TEST_START:
+@@ -2854,6 +2919,23 @@ static void cmprintf_standard(enum cm_printf_type type,
+             print_message("[  SKIPPED ] %s\n", test_name);
+         }
+         break;
++    case PRINTF_TEST_TODO_OK:
++        if (todo_note) {
++            print_message("[  TODO OK ] %s - %s\n", test_name, todo_note);
++        } else {
++            print_message("[  TODO OK ] %s\n", test_name);
++        }
++        break;
++    case PRINTF_TEST_TODO:
++        if (todo_note) {
++            print_message("[  TODO    ] %s - %s\n", test_name, todo_note);
++        } else {
++            print_message("[  TODO    ] %s\n", test_name);
++        }
++        if (error_message != NULL) {
++            print_error("[  ERROR   ] --- %s\n", error_message);
++        }
++        break;
+     case PRINTF_TEST_ERROR:
+         if (error_message != NULL) {
+             print_error("%s\n", error_message);
+@@ -2877,10 +2959,12 @@ static void cmprintf_group_start_tap(const size_t num_tests)
+ static void cmprintf_group_finish_tap(const char *group_name,
+                                       size_t total_executed,
+                                       size_t total_passed,
+-                                      size_t total_skipped)
++                                      size_t total_skipped,
++                                      size_t total_todo_ok,
++                                      size_t total_todo)
+ {
+     const char *status = "not ok";
+-    if (total_passed + total_skipped == total_executed) {
++    if (total_passed + total_skipped + total_todo_ok + total_todo == total_executed) {
+         status = "ok";
+     }
+     print_message("# %s - %s\n", status, group_name);
+@@ -2891,6 +2975,7 @@ static void cmprintf_tap(enum cm_printf_type type,
+                          const char *test_name,
+                          const char *error_message,
+                          const char *skip_note,
++                         const char *todo_note,
+                          CMData** test_data)
+ {
+     CMData* d;
+@@ -2916,6 +3001,21 @@ static void cmprintf_tap(enum cm_printf_type type,
+             print_message("ok %u - %s # SKIP\n", (unsigned)test_number, test_name);
+         }
+         break;
++    case PRINTF_TEST_TODO_OK:
++        if (todo_note) {
++            print_message("ok %u - %s # TODO %s\n", (unsigned)test_number, test_name, todo_note);
++        } else {
++            print_message("ok %u - %s # TODO\n", (unsigned)test_number, test_name);
++        }
++        break;
++    case PRINTF_TEST_TODO:
++        if (todo_note) {
++            print_message("not ok %u - %s # TODO %s\n", (unsigned)test_number, test_name, todo_note);
++        } else {
++            print_message("not ok %u - %s # TODO\n", (unsigned)test_number, test_name);
++        }
++        print_error_message = 1;
++        break;
+     }
+ 
+     if ((print_error_message == 1) && (error_message != NULL)) {
+@@ -3004,6 +3104,9 @@ static void cmprintf_subunit(enum cm_printf_type type,
+             print_message(" [\n%s\n]\n", error_message);
+         }
+         break;
++    case PRINTF_TEST_TODO_OK:
++    case PRINTF_TEST_TODO:
++        /* TODO: not sure about the subunit specification for TODO tests. Looks like they consider them as skipped. */
+     case PRINTF_TEST_SKIPPED:
+         /* TODO: should we print the explanation in DETAILS region as explained here: https://github.com/testing-cabal/subunit */
+         print_message("skip: %s\n", test_name);
+@@ -3035,6 +3138,8 @@ static void cmprintf_group_finish(const char *group_name,
+                                   size_t total_failed,
+                                   size_t total_errors,
+                                   size_t total_skipped,
++                                  size_t total_todo_ok,
++                                  size_t total_todo,
+                                   double total_runtime,
+                                   struct CMUnitTestState *cm_tests)
+ {
+@@ -3049,13 +3154,17 @@ static void cmprintf_group_finish(const char *group_name,
+                                        total_failed,
+                                        total_errors,
+                                        total_skipped,
++                                       total_todo_ok,
++                                       total_todo,
+                                        cm_tests);
+     }
+     if (output & CM_OUTPUT_TAP) {
+         cmprintf_group_finish_tap(group_name,
+                                   total_executed,
+                                   total_passed,
+-                                  total_skipped);
++                                  total_skipped,
++                                  total_todo_ok,
++                                  total_todo);
+     }
+     if (output & CM_OUTPUT_XML) {
+         cmprintf_group_finish_xml(group_name,
+@@ -3063,6 +3172,8 @@ static void cmprintf_group_finish(const char *group_name,
+                                   total_failed,
+                                   total_errors,
+                                   total_skipped,
++                                  total_todo_ok,
++                                  total_todo,
+                                   total_runtime,
+                                   cm_tests);
+     }
+@@ -3073,6 +3184,7 @@ static void cmprintf(enum cm_printf_type type,
+                      const char *test_name,
+                      const char *error_message,
+                      const char *skip_note,
++                     const char *todo_note,
+                      CMData** test_data)
+ {
+     uint32_t output;
+@@ -3080,13 +3192,13 @@ static void cmprintf(enum cm_printf_type type,
+     output = cm_get_output();
+ 
+     if (output & CM_OUTPUT_STANDARD) {
+-        cmprintf_standard(type, test_name, error_message, skip_note);
++        cmprintf_standard(type, test_name, error_message, skip_note, todo_note);
+     }
+     if (output & CM_OUTPUT_SUBUNIT) {
+         cmprintf_subunit(type, test_name, error_message);
+     }
+     if (output & CM_OUTPUT_TAP) {
+-        cmprintf_tap(type, test_number, test_name, error_message, skip_note, test_data);
++        cmprintf_tap(type, test_number, test_name, error_message, skip_note, todo_note, test_data);
+     }
+ }
+ 
+@@ -3324,17 +3436,27 @@ static int cmocka_run_one_tests(struct CMUnitTestState *test_state)
+                                             &test_state->state,
+                                             NULL);
+         if (rc == 0) {
+-            test_state->status = CM_TEST_PASSED;
++            if (global_todo_test) {
++                test_state->status = CM_TEST_TODO_OK;
++                test_state->todo_note = global_todo_test_note;
++            } else {
++                test_state->status = CM_TEST_PASSED;
++            }
+         } else {
+             if (global_skip_test) {
+                 test_state->status = CM_TEST_SKIPPED;
+                 test_state->skip_note = global_skip_test_note;
+                 global_skip_test = 0; /* Do not skip the next test */
+                 global_skip_test_note = NULL;
++            } else if (global_todo_test) {
++                test_state->status = CM_TEST_TODO;
++                test_state->todo_note = global_todo_test_note;
+             } else {
+                 test_state->status = CM_TEST_FAILED;
+             }
+         }
++        global_todo_test = 0;
++        global_todo_test_note = NULL;
+         rc = 0;
+     }
+ 
+@@ -3380,6 +3502,8 @@ int _cmocka_run_group_tests(const char *group_name,
+     size_t total_executed = 0;
+     size_t total_errors = 0;
+     size_t total_skipped = 0;
++    size_t total_todo_ok = 0;
++    size_t total_todo = 0;
+     double total_runtime = 0;
+     size_t i;
+     int rc;
+@@ -3442,7 +3566,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             struct CMUnitTestState *cmtest = &cm_tests[i];
+             size_t test_number = i + 1;
+ 
+-            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL, NULL, NULL);
++            cmprintf(PRINTF_TEST_START, test_number, cmtest->test->name, NULL, NULL, NULL, NULL);
+ 
+             if (group_state != NULL) {
+                 cmtest->state = group_state;
+@@ -3461,6 +3585,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
+                                  cmtest->skip_note,
++                                 cmtest->todo_note,
+                                  global_test_data);
+                         total_passed++;
+                         break;
+@@ -3470,6 +3595,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
+                                  cmtest->skip_note,
++                                 cmtest->todo_note,
+                                  global_test_data);
+                         total_skipped++;
+                         break;
+@@ -3479,15 +3605,37 @@ int _cmocka_run_group_tests(const char *group_name,
+                                  cmtest->test->name,
+                                  cmtest->error_message,
+                                  cmtest->skip_note,
++                                 cmtest->todo_note,
+                                  global_test_data);
+                         total_failed++;
+                         break;
++                    case CM_TEST_TODO_OK:
++                        cmprintf(PRINTF_TEST_TODO_OK,
++                                 test_number,
++                                 cmtest->test->name,
++                                 cmtest->error_message,
++                                 cmtest->skip_note,
++                                 cmtest->todo_note,
++                                 global_test_data);
++                        total_todo_ok++;
++                        break;
++                    case CM_TEST_TODO:
++                        cmprintf(PRINTF_TEST_TODO,
++                                 test_number,
++                                 cmtest->test->name,
++                                 cmtest->error_message,
++                                 cmtest->skip_note,
++                                 cmtest->todo_note,
++                                 global_test_data);
++                        total_todo++;
++                        break;
+                     default:
+                         cmprintf(PRINTF_TEST_ERROR,
+                                  test_number,
+                                  cmtest->test->name,
+                                  "Internal cmocka error",
+                                  NULL,
++                                 NULL,
+                                  NULL);
+                         total_errors++;
+                         break;
+@@ -3504,6 +3652,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                          cmtest->test->name,
+                          err_msg,
+                          NULL,
++                         NULL,
+                          NULL);
+                 total_errors++;
+             }
+@@ -3516,7 +3665,7 @@ int _cmocka_run_group_tests(const char *group_name,
+             cm_error_message = NULL;
+         }
+         cmprintf(PRINTF_TEST_ERROR, 0,
+-                 group_name, "[  FAILED  ] GROUP SETUP", NULL, NULL);
++                 group_name, "[  FAILED  ] GROUP SETUP", NULL, NULL, NULL);
+         total_errors++;
+     }
+ 
+@@ -3534,7 +3683,7 @@ int _cmocka_run_group_tests(const char *group_name,
+                 cm_error_message = NULL;
+             }
+             cmprintf(PRINTF_TEST_ERROR, 0,
+-                     group_name, "[  FAILED  ] GROUP TEARDOWN", NULL, NULL);
++                     group_name, "[  FAILED  ] GROUP TEARDOWN", NULL, NULL, NULL);
+         }
+     }
+ 
+@@ -3544,6 +3693,8 @@ int _cmocka_run_group_tests(const char *group_name,
+                           total_failed,
+                           total_errors,
+                           total_skipped,
++                          total_todo_ok,
++                          total_todo,
+                           total_runtime,
+                           cm_tests);
+ 
+diff --git a/src/cmocka.def b/src/cmocka.def
+index 3b29014..19e09e8 100644
+--- a/src/cmocka.def
++++ b/src/cmocka.def
+@@ -51,6 +51,8 @@ EXPORTS
+     _test_free
+     _test_malloc
+     _test_realloc
++    _todo
++    _todo_with_note
+     _will_return
+     cmocka_print_error
+     cmocka_set_message_output
+-- 
+GitLab
+
+
+From a671237d6719c5c9b244ba4c589b8ca7bfc5d2bd Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Tue, 9 Aug 2022 16:51:00 +0900
+Subject: [PATCH 6/8] Quick fix on cmprintf_group_finish_standard() because the
+ line breaks for messages such as "\n %u SKIPPED TEST(S)\n" made them appear
+ closer to the next list of tests than the lists they are related to.
+
+---
+ src/cmocka.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 978a477..54fb01a 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -2836,7 +2836,7 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                 (unsigned)(total_passed));
+ 
+     if (total_todo_ok) {
+-        print_message("[  TODO OK ] %s: %zu test(s), listed below:\n",
++        print_message("\n[  TODO OK ] %s: %zu test(s), listed below:\n",
+                       group_name,
+                       total_todo_ok);
+         for (i = 0; i < total_executed; i++) {
+@@ -2846,11 +2846,11 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                 print_message("[  TODO OK ] %s\n", cmtest->test->name);
+             }
+         }
+-        print_message("\n %u TODO TEST(S) PASSED - Consider promoting to normal test(s).\n", (unsigned)(total_todo_ok));
++        print_message(" %u TODO TEST(S) PASSED - Consider promoting to normal test(s).\n", (unsigned)(total_todo_ok));
+     }
+ 
+     if (total_todo) {
+-        print_message("[  TODO    ] %s: %zu test(s), listed below:\n",
++        print_message("\n[  TODO    ] %s: %zu test(s), listed below:\n",
+                       group_name,
+                       total_todo);
+         for (i = 0; i < total_executed; i++) {
+@@ -2860,11 +2860,11 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                 print_message("[  TODO    ] %s\n", cmtest->test->name);
+             }
+         }
+-        print_message("\n %u TODO TEST(S)\n", (unsigned)(total_todo));
++        print_message(" %u TODO TEST(S)\n", (unsigned)(total_todo));
+     }
+ 
+     if (total_skipped) {
+-        print_error("[  SKIPPED ] %s: %zu test(s), listed below:\n",
++        print_error("\n[  SKIPPED ] %s: %zu test(s), listed below:\n",
+                     group_name,
+                     total_skipped);
+         for (i = 0; i < total_executed; i++) {
+@@ -2874,11 +2874,11 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                 print_error("[  SKIPPED ] %s\n", cmtest->test->name);
+             }
+         }
+-        print_error("\n %zu SKIPPED TEST(S)\n", total_skipped);
++        print_error(" %zu SKIPPED TEST(S)\n", total_skipped);
+     }
+ 
+     if (total_failed) {
+-        print_error("[  FAILED  ] %s: %zu test(s), listed below:\n",
++        print_error("\n[  FAILED  ] %s: %zu test(s), listed below:\n",
+                     group_name,
+                     total_failed);
+         for (i = 0; i < total_executed; i++) {
+@@ -2888,7 +2888,7 @@ static void cmprintf_group_finish_standard(const char *group_name,
+                 print_error("[  FAILED  ] %s\n", cmtest->test->name);
+             }
+         }
+-        print_error("\n %zu FAILED TEST(S)\n",
++        print_error(" %zu FAILED TEST(S)\n",
+                     (total_failed + total_errors));
+     }
+ }
+-- 
+GitLab
+
+
+From 6c99594f6fb42128565a7bd9108fdf7efeb09ad5 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Sun, 28 Aug 2022 00:58:11 +0900
+Subject: [PATCH 7/8] fixed compilation warnings
+
+---
+ src/cmocka.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/src/cmocka.c b/src/cmocka.c
+index 54fb01a..cdb8d50 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -468,6 +468,7 @@ static void free_test_data(void) {
+                 switch (d->type) {
+                 case DATA_TYPE_STRING:
+                     free(d->value);
++                    break;
+                 default:
+                     break;
+                 }
+@@ -2762,21 +2763,19 @@ static void cmprintf_group_finish_xml(const char *group_name,
+         fprintf(fp, "    <testcase name=\"%s\" time=\"%.3f\" >\n",
+                 cmtest->test->name, cmtest->runtime);
+ 
+-        switch (cmtest->status) {
+-        case CM_TEST_TODO_OK:
+-        case CM_TEST_TODO:
++        if ((cmtest->status == CM_TEST_TODO) || (cmtest->status == CM_TEST_TODO_OK)) {
+             if (cmtest->todo_note) {
+                 fprintf(fp, "      <todo><![CDATA[%s]]></todo>\n",
+                         cmtest->todo_note);
+             } else {
+                 fprintf(fp, "      <todo/>\n");
+             }
+-            if (cmtest->status == CM_TEST_TODO_OK) {
+-                break;
+-            }
+-            // fall through
++        }
++
++        switch (cmtest->status) {
+         case CM_TEST_ERROR:
+         case CM_TEST_FAILED:
++        case CM_TEST_TODO:
+             if (cmtest->error_message != NULL) {
+                 fprintf(fp, "      <failure><![CDATA[%s]]></failure>\n",
+                         cmtest->error_message);
+@@ -2784,6 +2783,7 @@ static void cmprintf_group_finish_xml(const char *group_name,
+                 fprintf(fp, "      <failure message=\"Unknown error\" />\n");
+             }
+             break;
++
+         case CM_TEST_SKIPPED:
+             if (cmtest->skip_note) {
+                 fprintf(fp, "      <skipped><![CDATA[%s]]></skipped>\n",
+@@ -2795,6 +2795,7 @@ static void cmprintf_group_finish_xml(const char *group_name,
+ 
+         case CM_TEST_PASSED:
+         case CM_TEST_NOT_STARTED:
++        case CM_TEST_TODO_OK:
+             break;
+         }
+ 
+-- 
+GitLab
+
+
+From 7e3088264336fafb43bc4dbf842c657320a4c749 Mon Sep 17 00:00:00 2001
+From: maxime <maximeandrighetto@gmail.com>
+Date: Sun, 28 Aug 2022 01:06:58 +0900
+Subject: [PATCH 8/8] Fixed YAML syntax errors that occurred when messages or
+ string data printed to the TAP output contained quotes or ended with a
+ newline.
+
+---
+ src/cmocka.c | 77 ++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 72 insertions(+), 5 deletions(-)
+
+diff --git a/src/cmocka.c b/src/cmocka.c
+index cdb8d50..78288d9 100644
+--- a/src/cmocka.c
++++ b/src/cmocka.c
+@@ -2971,6 +2971,43 @@ static void cmprintf_group_finish_tap(const char *group_name,
+     print_message("# %s - %s\n", status, group_name);
+ }
+ 
++static char* escape_quotes(const char* str) {
++    size_t len = strlen(str);
++    const char *p1 = str;
++    const char *p2 = NULL;
++    char *result;
++
++    while ((p1 = strchr(p1, '"'))) {
++        len++;
++        p1++;
++    }
++
++    result = (char*)malloc(sizeof(char) * (len + 1));
++    if (!result) {
++        return NULL;
++    }
++    result[0] = 0;
++
++    p1 = str;
++    while ((p2 = strchr(p1, '"'))) {
++#ifdef _WIN32
++        strncat_s(result, len + 1, p1, p2 - p1);
++        strcat_s(result, len + 1, "\\\"");
++#else
++        strncat(result, p1, p2 - p1);
++        strcat(result, "\\\"");
++#endif
++        p1 = p2 + 1;
++    }
++#ifdef _WIN32
++    strcat_s(result, len + 1, p1);
++#else
++    strcat(result, p1);
++#endif
++
++    return result;
++}
++
+ static void cmprintf_tap(enum cm_printf_type type,
+                          size_t test_number,
+                          const char *test_name,
+@@ -2980,6 +3017,7 @@ static void cmprintf_tap(enum cm_printf_type type,
+                          CMData** test_data)
+ {
+     CMData* d;
++    const char *valueStr;
+     size_t i;
+     int diagnostics_opened = 0;
+     int print_error_message = 0;
+@@ -3021,19 +3059,33 @@ static void cmprintf_tap(enum cm_printf_type type,
+ 
+     if ((print_error_message == 1) && (error_message != NULL)) {
+         char *msg;
++        char *tmp;
+         char *p;
++        char quoteChar;
+         const char *indent = "";
+ 
+         msg = strdup(error_message);
+         if (msg == NULL) {
+             return;
+         }
+-        p = msg;
++
++        // Use double quotes if the message contains single quotes, then escape double quotes if needed.
++        quoteChar = strchr(msg, '\'') ? '"' : '\'';
++        if ((quoteChar == '"') && strchr(msg, '"')) {
++            tmp = escape_quotes(msg);
++            libc_free(msg);
++            if (tmp == NULL) {
++                return;
++            }
++            msg = tmp;
++        }
+ 
+         print_message("  ---\n");
+         diagnostics_opened = 1;
+ 
+-        print_message("  message: \"");
++        print_message("  message: %c", quoteChar);
++
++        p = msg;
+         while (p[0] != '\0') {
+             char *q = p;
+ 
+@@ -3042,7 +3094,7 @@ static void cmprintf_tap(enum cm_printf_type type,
+                 p[0] = '\0';
+                 print_message("%s%s\\n\\\n", indent, q);
+             } else {
+-                print_message("%s%s\"\n", indent, q);
++                print_message("%s%s", indent, q);
+                 break;
+             }
+             p++;
+@@ -3050,6 +3102,8 @@ static void cmprintf_tap(enum cm_printf_type type,
+         }
+         libc_free(msg);
+ 
++        print_message("%c\n", quoteChar);
++
+         print_message("  severity: %s\n", (type == PRINTF_TEST_FAILURE) ? "fail" : "error");
+     }
+ 
+@@ -3076,8 +3130,21 @@ static void cmprintf_tap(enum cm_printf_type type,
+                               d->name, d->value);
+                 break;
+             case DATA_TYPE_STRING:
+-                print_message("    %s: '%s'\n",
+-                              d->name, (const char *)(d->value));
++                valueStr = (const char *)(d->value);
++                if (strchr(valueStr, '\'')) {
++                    if (strchr(valueStr, '"')) {
++                        char *escapedVal = escape_quotes(valueStr);
++                        print_message("    %s: \"%s\"\n",
++                                      d->name, escapedVal ? escapedVal : "<MISSING>");
++                        free(escapedVal);
++                    } else {
++                        print_message("    %s: \"%s\"\n",
++                                      d->name, valueStr);
++                    }
++                } else {
++                    print_message("    %s: '%s'\n",
++                                  d->name, valueStr);
++                }
+                 break;
+             }
+         }
+-- 
+GitLab
+
