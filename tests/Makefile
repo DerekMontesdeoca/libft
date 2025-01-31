@@ -22,7 +22,7 @@ all: run_test
 run_test: source $(NAME)
 	@LD_LIBRARY_PATH=$(shell dirname $(CMOCKA_LIB)) ./$(NAME)
 
-$(NAME): $(OBJS) ../libft.a $(CMOCKA_LIB)
+$(NAME): $(CMOCKA_LIB) $(OBJS) ../libft.a
 	@$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 ../libft.a: source
@@ -31,8 +31,7 @@ source:
 	@cd ../ && $(MAKE) bonus -s
 
 $(CMOCKA_LIB):
-	@echo $(CMOCKA_DIR)
-	@echo $(CMOCKA_BUILD)
+	@git submodule update --init --recursive
 	@mkdir -p $(CMOCKA_BUILD)
 	@cd $(CMOCKA_BUILD) && cmake -DCMAKE_BUILD_TYPE=Release ..
 	@$(MAKE) -C $(CMOCKA_BUILD)
