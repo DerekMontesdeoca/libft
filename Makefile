@@ -1,5 +1,5 @@
 CC := cc
-CFLAGS := -Wall -Wextra -Werror
+CFLAGS := -Wall -Wextra -Werror -fPIE
 ifeq ($(DEBUG), TRUE)
 	CFLAGS += -g
 endif

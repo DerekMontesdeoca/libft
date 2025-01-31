@@ -819,12 +819,7 @@ void	test_split_only_delim(void **state)
 
 void	test_split_no_delim(void **state)
 {
-	test_split(
-			state,
-			"Are you free?",
-			'~',
-			(char*[]){"Are you free?", NULL}
-			);
+	test_split( state, "Are you free?", '~', (char*[]){"Are you free?", NULL});
 }
 
 void	test_split_empty_str(void **state)
@@ -986,10 +981,12 @@ void	test_putendl_fd_basic(void **state)
 			__wrap_write,
 			buf,
 			"The tall blonde chick in the red track suit "
-			"is starting to freak me out \n",
-			44+28+1
+			"is starting to freak me out ",
+			44+28
 			);
-	expect_value(__wrap_write, count, 44+28+1);
+	expect_value(__wrap_write, count, 44+28);
+	expect_memory( __wrap_write, buf, "\n", 1);
+	expect_value(__wrap_write, count, 1);
 	ft_putendl_fd(string, 0);
 	assert_string_equal(original, string);
 }

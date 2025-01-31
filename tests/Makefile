@@ -1,12 +1,12 @@
 # CMocka Library
 CMOCKA_DIR := cmocka
 CMOCKA_BUILD := $(CMOCKA_DIR)/build
-CMOCKA_INCLUDE := $(CMOCKA_BUILD)/include
+CMOCKA_INCLUDE := $(CMOCKA_DIR)/include
 CMOCKA_LIB := $(CMOCKA_BUILD)/src/libcmocka.so
 
 # Test Executable 
 CC := cc
-CFLAGS := -Wall -Wextra -Werror
+CFLAGS := -Wall -Wextra -Werror -I $(CMOCKA_INCLUDE)
 ifeq ($(DEBUG), TRUE)
 	CFLAGS += -g
 endif
@@ -38,7 +38,7 @@ $(CMOCKA_LIB):
 	@$(MAKE) -C $(CMOCKA_BUILD)
 
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	@rm -rf $(OBJS) $(CMOCKA_BUILD)
