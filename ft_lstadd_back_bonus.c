@@ -1,24 +1,25 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   char_classes.h                                     :+:      :+:    :+:   */
+/*   ft_lstadd_back_bonus.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/27 13:36:33 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/30 00:32:11 by dmontesd         ###   ########.fr       */
+/*   Created: 2025/01/30 11:40:11 by dmontesd          #+#    #+#             */
+/*   Updated: 2025/01/31 19:04:40 by karlarod         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CHAR_CLASSES_H
-# define CHAR_CLASSES_H
+#include "libft.h"
+#include <stdlib.h>
 
-# define ALPHA 1
-# define DIGIT 2 
-# define ALNUM 4
-# define ASCII 8
-# define PRINT 16
+void	ft_lstadd_back(t_list **lst, t_list *new)
+{
+	t_list	*last;
 
-int	test_char_class(int _class, int _char);
-
-#endif
+	last = ft_lstlast(*lst);
+	if (last == NULL)
+		*lst = new;
+	else
+		last->next = new;
+}

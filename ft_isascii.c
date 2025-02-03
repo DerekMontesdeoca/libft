@@ -6,13 +6,13 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/27 01:28:04 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/28 19:31:24 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/01/31 18:45:35 by karlarod         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "char_classes.h"
+#include "libft.h"
 
 int	ft_isascii(int c)
 {
-	return (test_char_class(ASCII, c));
+	return (c >= 0 && c <= 127);
 }

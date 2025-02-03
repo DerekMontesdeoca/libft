@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/27 01:11:56 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/29 22:05:06 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/01/31 18:21:55 by karlarod         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ static void	free_split(char **strs)
 	while (strs[i] != NULL)
 	{
 		free(strs[i]);
+		strs[i] = NULL;
 		++i;
 	}
 	free(strs);
@@ -83,6 +84,9 @@ char	**ft_split(char const *s, char c)
 	if (strs == NULL)
 		return (NULL);
 	if (!split(strs, n_strs, s, c))
+	{
 		free_split(strs);
+		return (NULL);
+	}
 	return (strs);
 }

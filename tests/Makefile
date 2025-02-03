@@ -8,7 +8,7 @@ CMOCKA_LIB := $(CMOCKA_BUILD)/src/libcmocka.so
 CC := cc
 CFLAGS := -Wall -Wextra -Werror -I $(CMOCKA_INCLUDE)
 ifeq ($(DEBUG), TRUE)
-	CFLAGS += -g
+	CFLAGS += -g -fsanitize=address -fno-omit-frame-pointer
 endif
 LDFLAGS := -lbsd -Wl,--wrap=malloc -Wl,--wrap=write -Wl,--wrap=free
 NAME := test

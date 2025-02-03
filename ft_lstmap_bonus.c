@@ -1,51 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_lst_2_bonus.c                                   :+:      :+:    :+:   */
+/*   ft_lstmap_bonus.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/30 12:00:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/30 17:37:36 by dmontesd         ###   ########.fr       */
+/*   Created: 2025/01/30 11:40:11 by dmontesd          #+#    #+#             */
+/*   Updated: 2025/01/31 19:06:38 by karlarod         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
 #include "libft.h"
-
-void	ft_lstdelone(t_list *lst, void (*del)(void *))
-{
-	if (lst == NULL)
-		return ;
-	if (del != NULL)
-		del(lst->content);
-	free(lst);
-}
-
-void	ft_lstiter(t_list *lst, void (*f)(void *))
-{
-	while (lst != NULL)
-	{
-		if (f != NULL)
-			f(lst->content);
-		lst = lst->next;
-	}
-}
-
-void	ft_lstclear(t_list **lst, void (*del)(void *))
-{
-	t_list	*next;
-	t_list	*current;
-
-	current = *lst;
-	*lst = NULL;
-	while (current != NULL)
-	{
-		next = current->next;
-		ft_lstdelone(current, del);
-		current = next;
-	}
-}
+#include <stdlib.h>
 
 static t_list	*lst_new_mapped_node(
 	void *content, void *(*f)(void *), void (*del)(void *)

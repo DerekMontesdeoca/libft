@@ -6,13 +6,13 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/27 01:26:27 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/28 19:28:39 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/01/31 18:50:06 by karlarod         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "char_classes.h"
+#include "libft.h"
 
 int	ft_isalnum(int c)
 {
-	return (test_char_class(ALNUM, c));
+	return (ft_isalpha(c) || ft_isdigit(c));
 }

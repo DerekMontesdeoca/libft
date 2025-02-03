@@ -23,7 +23,6 @@ void	*__wrap_malloc(size_t size)
 	return (memset(memory_block, '\xff', size));
 }
 
-
 void __real_free(void *ptr);
 
 void __wrap_free(void *ptr)
@@ -939,8 +938,10 @@ void	test_striteri(
 ) {
 	(void) state;
 	char *s2 = strdup(s);
+	assert_non_null(s2);
 	ft_striteri(s2, f);
 	assert_string_equal(s2, expected);
+	__real_free(s2);
 }
 
 void	id_mut(unsigned int i, char *c)
@@ -972,24 +973,42 @@ ssize_t __wrap_write(int fd, const void *buf, size_t count)
 	return (count);
 }
 
+int	check_write(const unsigned long buf, const unsigned long check)
+{
+	static int i = 0;
+	const char *str = (const char *) buf;
+	const char *str_check = (const char *) check;
+	int len = strlen(str_check);
+	if (i >= len)
+		return (false);
+	bool result = strncmp(str, str_check + i, strlen(str)) == 0;
+	i += strlen(str);
+	return (result);
+}
+
 void	test_putendl_fd_basic(void **state)
 {
 	const char	*original = "The tall blonde chick in the red track suit " 
 		"is starting to freak me out ";
+	const char	*original2 = "The tall blonde chick in the red track suit " 
+		"is starting to freak me out \n";
 	char *string = strdup(original);
+	assert_non_null(string);
 	(void) state;
-	expect_memory(
-			__wrap_write,
-			buf,
-			"The tall blonde chick in the red track suit "
-			"is starting to freak me out ",
-			44+28
-			);
-	expect_value(__wrap_write, count, 44+28);
-	expect_memory( __wrap_write, buf, "\n", 1);
-	expect_value(__wrap_write, count, 1);
+	/* expect_any_always(__wrap_write, buf); */
+	expect_check(__wrap_write, buf, check_write, original2);
+	/* expect_check(__wrap_write, buf, check_write, original2); */
+	expect_any_always(__wrap_write, count);
+	/* expect_memory( */
+	/* 	__wrap_write, */
+	/* 	buf, */
+	/* 	"The tall blonde chick in the red track suit " */
+	/* 	"is starting to freak me out ", */
+	/* 	44+28 */
+	/* ); */
 	ft_putendl_fd(string, 0);
 	assert_string_equal(original, string);
+	__real_free(string);
 }
 
 void	test_putnbr_fd_basic(void **state)
@@ -1125,13 +1144,13 @@ void	test_lstmap(void **state)
 	for (int i = 0; i < 6; ++i)
 		expect_value(__wrap_malloc, size, sizeof(t_list));
 
-	t_list *lst2 = ft_lstmap(lst, incrmap, free);
+	t_list *lst2 = ft_lstmap(lst, incrmap, __real_free);
 	i = 1;
 	for (t_list *cur = lst2; cur != NULL; cur = cur->next, ++i)
 		assert_int_equal(*(int *)(cur->content), i + 1);
 
 	ft_lstclear(&lst, NULL);
-	ft_lstclear(&lst2, NULL);
+	ft_lstclear(&lst2, __real_free);
 }
 
 int main(void)

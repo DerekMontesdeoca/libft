@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/27 01:52:19 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/01/30 16:23:14 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/02/03 16:28:01 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,6 @@ void	ft_lstdelone(t_list *lst, void (*del)(void *));
 
 void	ft_lstiter(t_list *lst, void (*f)(void *));
 
-void	ft_lstclear(t_list **lst, void (*del)(void *));
-
 t_list	*ft_lstnew(void *content);
 
 void	ft_lstadd_front(t_list **lst, t_list *new);
@@ -107,8 +105,8 @@ void	ft_lstadd_back(t_list **lst, t_list *new);
 
 t_list	*ft_lstmap(t_list *lst, void *(*f)(void *), void (*del)(void *));
 
-void	ft_lstiter(t_list *lst, void (*f)(void *));
-
 void	ft_lstclear(t_list **lst, void (*del)(void *));
+
+int		test_char_class(int _class, int _char);
 
 #endif
