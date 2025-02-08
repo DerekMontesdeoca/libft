@@ -2,7 +2,7 @@ CC := cc
 CFLAGS := -Wall -Wextra -Werror
 
 ifeq ($(DEBUG), TRUE)
-	CFLAGS += -g3 -fno-omit-frame-pointer -fsanitize=address
+	CFLAGS += -g3 -fno-omit-frame-pointer 
 endif
 
 NAME := libft.a
