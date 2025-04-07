@@ -1,6 +1,0 @@
-[submodule "libft-tester"]
-	path = libft-tester
-	url = git@github.com:DerekMontesdeoca/libft-tester.git
-[submodule "tests"]
-	path = tests
-	url = git@github.com:DerekMontesdeoca/libft-tester.git

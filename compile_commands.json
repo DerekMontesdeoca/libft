@@ -1,0 +1,866 @@
+[
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_isalpha.o",
+      "src/ft_isalpha.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_isalpha.c",
+    "output": "/home/demont93/Projects/libft/src/ft_isalpha.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_isdigit.o",
+      "src/ft_isdigit.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_isdigit.c",
+    "output": "/home/demont93/Projects/libft/src/ft_isdigit.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_isalnum.o",
+      "src/ft_isalnum.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_isalnum.c",
+    "output": "/home/demont93/Projects/libft/src/ft_isalnum.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_isascii.o",
+      "src/ft_isascii.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_isascii.c",
+    "output": "/home/demont93/Projects/libft/src/ft_isascii.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strlen.o",
+      "src/ft_strlen.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strlen.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strlen.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_memset.o",
+      "src/ft_memset.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_memset.c",
+    "output": "/home/demont93/Projects/libft/src/ft_memset.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_bzero.o",
+      "src/ft_bzero.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_bzero.c",
+    "output": "/home/demont93/Projects/libft/src/ft_bzero.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_memcpy.o",
+      "src/ft_memcpy.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_memcpy.c",
+    "output": "/home/demont93/Projects/libft/src/ft_memcpy.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_memmove.o",
+      "src/ft_memmove.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_memmove.c",
+    "output": "/home/demont93/Projects/libft/src/ft_memmove.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strlcpy.o",
+      "src/ft_strlcpy.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strlcpy.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strlcpy.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strlcat.o",
+      "src/ft_strlcat.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strlcat.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strlcat.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_toupper.o",
+      "src/ft_toupper.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_toupper.c",
+    "output": "/home/demont93/Projects/libft/src/ft_toupper.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_tolower.o",
+      "src/ft_tolower.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_tolower.c",
+    "output": "/home/demont93/Projects/libft/src/ft_tolower.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strchr.o",
+      "src/ft_strchr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strchr.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strchr.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strrchr.o",
+      "src/ft_strrchr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strrchr.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strrchr.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strncmp.o",
+      "src/ft_strncmp.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strncmp.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strncmp.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_memchr.o",
+      "src/ft_memchr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_memchr.c",
+    "output": "/home/demont93/Projects/libft/src/ft_memchr.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_memcmp.o",
+      "src/ft_memcmp.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_memcmp.c",
+    "output": "/home/demont93/Projects/libft/src/ft_memcmp.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strnstr.o",
+      "src/ft_strnstr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strnstr.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strnstr.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_atoi.o",
+      "src/ft_atoi.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_atoi.c",
+    "output": "/home/demont93/Projects/libft/src/ft_atoi.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_calloc.o",
+      "src/ft_calloc.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_calloc.c",
+    "output": "/home/demont93/Projects/libft/src/ft_calloc.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strdup.o",
+      "src/ft_strdup.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strdup.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strdup.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_substr.o",
+      "src/ft_substr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_substr.c",
+    "output": "/home/demont93/Projects/libft/src/ft_substr.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strjoin.o",
+      "src/ft_strjoin.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strjoin.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strjoin.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strtrim.o",
+      "src/ft_strtrim.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strtrim.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strtrim.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_split.o",
+      "src/ft_split.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_split.c",
+    "output": "/home/demont93/Projects/libft/src/ft_split.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_itoa.o",
+      "src/ft_itoa.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_itoa.c",
+    "output": "/home/demont93/Projects/libft/src/ft_itoa.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strmapi.o",
+      "src/ft_strmapi.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strmapi.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strmapi.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_striteri.o",
+      "src/ft_striteri.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_striteri.c",
+    "output": "/home/demont93/Projects/libft/src/ft_striteri.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_isprint.o",
+      "src/ft_isprint.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_isprint.c",
+    "output": "/home/demont93/Projects/libft/src/ft_isprint.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_putnbr_fd.o",
+      "src/ft_putnbr_fd.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_putnbr_fd.c",
+    "output": "/home/demont93/Projects/libft/src/ft_putnbr_fd.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_putchar_fd.o",
+      "src/ft_putchar_fd.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_putchar_fd.c",
+    "output": "/home/demont93/Projects/libft/src/ft_putchar_fd.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_putstr_fd.o",
+      "src/ft_putstr_fd.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_putstr_fd.c",
+    "output": "/home/demont93/Projects/libft/src/ft_putstr_fd.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_putendl_fd.o",
+      "src/ft_putendl_fd.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_putendl_fd.c",
+    "output": "/home/demont93/Projects/libft/src/ft_putendl_fd.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstadd_front_bonus.o",
+      "src/ft_lstadd_front_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstadd_front_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstadd_front_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstiter_bonus.o",
+      "src/ft_lstiter_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstiter_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstiter_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstdelone_bonus.o",
+      "src/ft_lstdelone_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstdelone_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstdelone_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstmap_bonus.o",
+      "src/ft_lstmap_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstmap_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstmap_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstclear_bonus.o",
+      "src/ft_lstclear_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstclear_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstclear_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstadd_back_bonus.o",
+      "src/ft_lstadd_back_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstadd_back_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstadd_back_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstsize_bonus.o",
+      "src/ft_lstsize_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstsize_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstsize_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstlast_bonus.o",
+      "src/ft_lstlast_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstlast_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstlast_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_lstnew_bonus.o",
+      "src/ft_lstnew_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_lstnew_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/ft_lstnew_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/ft_printf.o",
+      "src/printf/ft_printf.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/ft_printf.c",
+    "output": "/home/demont93/Projects/libft/src/printf/ft_printf.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/string_length.o",
+      "src/printf/string_length.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/string_length.c",
+    "output": "/home/demont93/Projects/libft/src/printf/string_length.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/writer.o",
+      "src/printf/writer.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/writer.c",
+    "output": "/home/demont93/Projects/libft/src/printf/writer.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser.o",
+      "src/printf/parser.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_token.o",
+      "src/printf/parser_token.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_token.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_token.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_padding.o",
+      "src/printf/parser_padding.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_padding.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_padding.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_write_string.o",
+      "src/printf/parser_write_string.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_write_string.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_write_string.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_hash_flag.o",
+      "src/printf/parser_hash_flag.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_hash_flag.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_hash_flag.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/writer_write_format.o",
+      "src/printf/writer_write_format.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/writer_write_format.c",
+    "output": "/home/demont93/Projects/libft/src/printf/writer_write_format.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_parse_format_string.o",
+      "src/printf/parser_parse_format_string.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_parse_format_string.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_parse_format_string.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/printf/parser_write_nbr.o",
+      "src/printf/parser_write_nbr.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/printf/parser_write_nbr.c",
+    "output": "/home/demont93/Projects/libft/src/printf/parser_write_nbr.o"
+  }
+]
