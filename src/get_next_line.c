@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/11 13:07:39 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/04/22 05:32:47 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/04/22 17:38:29 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ static bool	buf_init(t_buf *buf, int fd)
 	return (true);
 }
 
-void	buf_reset(void)
+void	reset_buf(void)
 {
 	t_buf	*buf;
 
