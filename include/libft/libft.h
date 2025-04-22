@@ -6,7 +6,7 @@
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/27 01:52:19 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/04/22 04:23:44 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/04/22 05:34:24 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,5 +125,7 @@ int		ft_printf(char const *format, ...);
 int		ft_fprintf(int fd, char const *format, ...);
 
 char	*get_next_line(int fd);
+
+char	reset_buf(void);
 
 #endif

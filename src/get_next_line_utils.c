@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line_utils_bonus.c                        :+:      :+:    :+:   */
+/*   get_next_line_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dmontesd <dmontesd@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/18 05:21:25 by dmontesd          #+#    #+#             */
-/*   Updated: 2025/03/24 22:48:15 by dmontesd         ###   ########.fr       */
+/*   Updated: 2025/04/22 05:33:26 by dmontesd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
-#include "get_next_line_bonus.h"
+#include "get_next_line.h"
 
 void	*ft_realloc(void *ptr, size_t old_size, size_t new_size)
 {
@@ -52,12 +52,15 @@ bool	dynstr_ensure_size(t_dynstr *str, size_t ensured)
 	}
 	new_data = ft_realloc(str->data, str->size, new_size);
 	if (new_data == NULL)
-	{
-		free(str->data);
-		str->data = NULL;
 		return (false);
-	}
 	str->data = new_data;
 	str->size = new_size;
 	return (true);
+}
+
+t_buf	*get_buf(void)
+{
+	static t_buf	buf;
+
+	return (&buf);
 }
