@@ -696,6 +696,38 @@
       "-Iinclude",
       "-c",
       "-o",
+      "src/get_next_line_bonus.o",
+      "src/get_next_line_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/get_next_line_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/get_next_line_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/get_next_line_utils_bonus.o",
+      "src/get_next_line_utils_bonus.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/get_next_line_utils_bonus.c",
+    "output": "/home/demont93/Projects/libft/src/get_next_line_utils_bonus.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
       "src/printf/ft_printf.o",
       "src/printf/ft_printf.c"
     ],
