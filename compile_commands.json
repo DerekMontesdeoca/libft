@@ -696,12 +696,12 @@
       "-Iinclude",
       "-c",
       "-o",
-      "src/get_next_line_bonus.o",
-      "src/get_next_line_bonus.c"
+      "src/get_next_line.o",
+      "src/get_next_line.c"
     ],
     "directory": "/home/demont93/Projects/libft",
-    "file": "/home/demont93/Projects/libft/src/get_next_line_bonus.c",
-    "output": "/home/demont93/Projects/libft/src/get_next_line_bonus.o"
+    "file": "/home/demont93/Projects/libft/src/get_next_line.c",
+    "output": "/home/demont93/Projects/libft/src/get_next_line.o"
   },
   {
     "arguments": [
@@ -712,12 +712,60 @@
       "-Iinclude",
       "-c",
       "-o",
-      "src/get_next_line_utils_bonus.o",
-      "src/get_next_line_utils_bonus.c"
+      "src/get_next_line_utils.o",
+      "src/get_next_line_utils.c"
     ],
     "directory": "/home/demont93/Projects/libft",
-    "file": "/home/demont93/Projects/libft/src/get_next_line_utils_bonus.c",
-    "output": "/home/demont93/Projects/libft/src/get_next_line_utils_bonus.o"
+    "file": "/home/demont93/Projects/libft/src/get_next_line_utils.c",
+    "output": "/home/demont93/Projects/libft/src/get_next_line_utils.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strchrnul.o",
+      "src/ft_strchrnul.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strchrnul.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strchrnul.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_mempcpy.o",
+      "src/ft_mempcpy.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_mempcpy.c",
+    "output": "/home/demont93/Projects/libft/src/ft_mempcpy.o"
+  },
+  {
+    "arguments": [
+      "/home/demont93/.local/bin/cc",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ft_strnlen.o",
+      "src/ft_strnlen.c"
+    ],
+    "directory": "/home/demont93/Projects/libft",
+    "file": "/home/demont93/Projects/libft/src/ft_strnlen.c",
+    "output": "/home/demont93/Projects/libft/src/ft_strnlen.o"
   },
   {
     "arguments": [
